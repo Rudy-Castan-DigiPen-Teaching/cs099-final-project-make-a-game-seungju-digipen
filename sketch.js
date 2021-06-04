@@ -2,70 +2,94 @@
 // Assignment : make-a-game
 // Course     : CS099
 // Spring 2021
+function make2DArray( cols, rows )
+{
+    let arr = new Array( cols );
+    for ( let i = 0; i < arr.length; i++ )
+    {
+        arr[ i ] = new Array( rows );
+    }
+    return arr;
+}
 
-let DIMENSION = 53.8;
-let PLAYER_TURN = 1;
-let BlackStone = []
-const number_rows = 19;
-const number_columns = 19;
+let grid;
+let cols;
+let rows;
+let resolution = 80;
+
 
 function setup()
 {
-    createCanvas( windowHeight, windowHeight );
-    DIMENSION = width / ( number_rows - 1 )
+    createCanvas( 1600, 1200 );
+    cols = width / resolution;
+    rows = height / resolution;
+
+    grid = make2DArray( cols, rows );
+    for ( let i = 0; i < cols; i++ )
+    {
+        for ( let j = 0; j < rows; j++ )
+        {
+            grid[ i ][ j ] = floor( random( 2 ) );
+        }
+    }
 }
 
 function draw()
 {
-    background( 220 );
-    drawGrid();
-    BlackStone.draw();
-}
+    background( 255 );
 
-function drawGrid()
-{
-    for ( let row = 0; row < number_rows; ++row )
+    for ( let i = 0; i < cols; i++ )
     {
-        const now_y = row * DIMENSION;
-        for ( let column = 0; column < number_columns; ++column )
+        for ( let j = 0; j < rows; j++ )
         {
-            const now_x = column * DIMENSION;
-            line( now_x, 0, now_x, height );
-
-            if ( mouseX > now_x - ( DIMENSION / 2 ) && mouseX < now_x + ( DIMENSION / 2 ) )
+            let x = i * resolution;
+            let y = j * resolution;
+            if ( grid[ i ][ j ] == 1 )
             {
-                if ( mouseY > now_y - ( DIMENSION / 2 ) && mouseY < now_y + ( DIMENSION / 2 ) )
-                {
-                    if ( PLAYER_TURN == 1 )
-                    {
-                        push();
-                        rectMode( CENTER );
-                        square( now_x, now_y, ( DIMENSION / 2 ) );
-                        pop();
-                        if ( keyIsPressed && keyCode === 32 )
-                        {
-                            BlackStone.push( new Blackstone( now_x, now_y ) );
-                        }
-                    }
-                }
+                fill( 0, 255, 0 );
+                stroke( 0 );
+                rect( x, y, resolution - 1, resolution - 1 );
             }
         }
-        line( 0, now_y, width, now_y );
     }
+
+    let next = make2DArray( cols, rows );
+
+    // Compute next based on grid
+    for ( let i = 0; i < cols; i++ )
+    {
+        for ( let j = 0; j < rows; j++ )
+        {
+
+        }
+    }
+
+    grid = next;
 }
 
-class Blackstone
+function countNeighbors( grid, x, y )
 {
-    constructor( start_x, start_y )
+    let sum = 0;
+    for ( let i = -1; i < 2; i++ )
     {
-        this.x = start_x;
-        this.y = start_y
+        for ( let j = -1; j < 2; j++ )
+        {
+            let col = ( x + i + cols ) % cols;
+            let row = ( y + j + rows ) % rows;
+            sum += grid[ col ][ row ];
+        }
     }
-    draw()
+    sum -= grid[ x ][ y ];
+    return sum;
+}
+
+
+function mousePressed()
+{
+    if ( mouseButton === LEFT )
     {
-        push();
-        fill( 0 );
-        circle( this.x, this.y, 30 );
-        pop();
+        let i = round( mouseX / resolution );
+        let j = round( mouseY / resolution );
+        grid[ i ][ j ] = 1;
     }
 }
