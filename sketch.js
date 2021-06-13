@@ -2,94 +2,140 @@
 // Assignment : make-a-game
 // Course     : CS099
 // Spring 2021
-function make2DArray( cols, rows )
-{
-    let arr = new Array( cols );
-    for ( let i = 0; i < arr.length; i++ )
-    {
-        arr[ i ] = new Array( rows );
-    }
-    return arr;
-}
 
-let grid;
-let cols;
-let rows;
-let resolution = 80;
+let x;
+let y;
+let dx;
+let dy;
+let ballRadius = 15;
+let ballSpeed = 10;
 
+let paddleHeight = 10;
+let paddleWidth = 500;
+let paddleX;
+
+let rightPressed = false;
+let leftPressed = false;
+let gamePlay = true;
+
+let brickRowCount = 5;
+let brickColumnCount = 5;
+let brickWidth = 300;
+let brickHeight = 60;
+let brickGap = 10;
+let brickOffsetTop = 30;
+let brickOffsetLeft = 30;
+let bricks = [];
 
 function setup()
 {
     createCanvas( 1600, 1200 );
-    cols = width / resolution;
-    rows = height / resolution;
-
-    grid = make2DArray( cols, rows );
-    for ( let i = 0; i < cols; i++ )
+    x = width / 2;
+    y = height / 2
+    dx = ballSpeed;
+    dy = ballSpeed;
+    paddleX = ( width - paddleWidth ) / 2;
+    for ( let c = 0; c < brickColumnCount; c++ )
     {
-        for ( let j = 0; j < rows; j++ )
+        bricks[ c ] = [];
+        for ( let r = 0; r < brickRowCount; r++ )
         {
-            grid[ i ][ j ] = floor( random( 2 ) );
+            bricks[ c ][ r ] = {
+                x: 0,
+                y: 0
+            };
         }
     }
 }
 
 function draw()
 {
-    background( 255 );
-
-    for ( let i = 0; i < cols; i++ )
+    background( 120 );
+    if ( gamePlay )
     {
-        for ( let j = 0; j < rows; j++ )
+        drawBall();
+        drawPaddle();
+        keyInput();
+        paddleMoving();
+        drawBricks();
+        x += dx;
+        y += dy;
+        if ( x + dx > width - ballRadius || x + dx < ballRadius )
         {
-            let x = i * resolution;
-            let y = j * resolution;
-            if ( grid[ i ][ j ] == 1 )
+            dx = -dx;
+        }
+        if ( y + dy < ballRadius )
+        {
+            dy = -dy;
+        }
+        else if ( y + dy > height - ballRadius )
+        {
+            if ( x > paddleX && x < paddleX + paddleWidth )
             {
-                fill( 0, 255, 0 );
-                stroke( 0 );
-                rect( x, y, resolution - 1, resolution - 1 );
+                dy = -dy;
+            }
+            else
+            {
+                gamePlay = false;
             }
         }
     }
-
-    let next = make2DArray( cols, rows );
-
-    // Compute next based on grid
-    for ( let i = 0; i < cols; i++ )
-    {
-        for ( let j = 0; j < rows; j++ )
-        {
-
-        }
-    }
-
-    grid = next;
 }
 
-function countNeighbors( grid, x, y )
+function drawBall()
 {
-    let sum = 0;
-    for ( let i = -1; i < 2; i++ )
-    {
-        for ( let j = -1; j < 2; j++ )
-        {
-            let col = ( x + i + cols ) % cols;
-            let row = ( y + j + rows ) % rows;
-            sum += grid[ col ][ row ];
-        }
-    }
-    sum -= grid[ x ][ y ];
-    return sum;
+    circle( x, y, 30 );
 }
 
-
-function mousePressed()
+function drawPaddle()
 {
-    if ( mouseButton === LEFT )
+    rect( paddleX, height - paddleHeight, paddleWidth, paddleHeight );
+}
+
+function keyInput()
+{
+    if ( keyIsDown( LEFT_ARROW ) )
     {
-        let i = round( mouseX / resolution );
-        let j = round( mouseY / resolution );
-        grid[ i ][ j ] = 1;
+        leftPressed = true;
+    }
+    else
+    {
+        leftPressed = false;
+    }
+
+    if ( keyIsDown( RIGHT_ARROW ) )
+    {
+        rightPressed = true;
+    }
+    else
+    {
+        rightPressed = false;
+    }
+}
+
+function paddleMoving()
+{
+    if ( rightPressed )
+    {
+        paddleX += 10;
+    }
+    if ( leftPressed )
+    {
+        paddleX -= 10;
+    }
+}
+
+function drawBricks()
+{
+    for ( let c = 0; c < brickColumnCount; c++ )
+    {
+        for ( let r = 0; r < brickRowCount; r++ )
+        {
+            let brickX = ( c * ( brickWidth + brickGap ) ) + brickOffsetLeft;
+            let brickY = ( r * ( brickHeight + brickGap ) ) + brickOffsetTop;
+            bricks[ c ][ r ].x = brickX;
+            bricks[ c ][ r ].y = brickY;
+            rect( brickX, brickY, brickWidth, brickHeight );
+        }
     }
 }
