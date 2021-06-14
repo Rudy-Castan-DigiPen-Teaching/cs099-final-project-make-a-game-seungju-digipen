@@ -17,6 +17,7 @@ let paddleX;
 let rightPressed = false;
 let leftPressed = false;
 let gamePlay = true;
+let score = 0;
 
 let brickRowCount = 5;
 let brickColumnCount = 5;
@@ -42,7 +43,8 @@ function setup()
         {
             bricks[ c ][ r ] = {
                 x: 0,
-                y: 0
+                y: 0,
+                status: 1
             };
         }
     }
@@ -58,6 +60,8 @@ function draw()
         keyInput();
         paddleMoving();
         drawBricks();
+        collisionDetection();
+        drawScore();
         x += dx;
         y += dy;
         if ( x + dx > width - ballRadius || x + dx < ballRadius )
@@ -79,6 +83,10 @@ function draw()
                 gamePlay = false;
             }
         }
+    }
+    if(!gamePlay)
+    {
+
     }
 }
 
@@ -131,11 +139,36 @@ function drawBricks()
     {
         for ( let r = 0; r < brickRowCount; r++ )
         {
-            let brickX = ( c * ( brickWidth + brickGap ) ) + brickOffsetLeft;
-            let brickY = ( r * ( brickHeight + brickGap ) ) + brickOffsetTop;
-            bricks[ c ][ r ].x = brickX;
-            bricks[ c ][ r ].y = brickY;
-            rect( brickX, brickY, brickWidth, brickHeight );
+            if ( bricks[ c ][ r ].status == 1 )
+            {
+                let brickX = ( c * ( brickWidth + brickGap ) ) + brickOffsetLeft;
+                let brickY = ( r * ( brickHeight + brickGap ) ) + brickOffsetTop;
+                bricks[ c ][ r ].x = brickX;
+                bricks[ c ][ r ].y = brickY;
+                rect( brickX, brickY, brickWidth, brickHeight );
+            }
         }
     }
+}
+
+function collisionDetection()
+{
+    for ( let c = 0; c < brickColumnCount; c++ )
+    {
+        for ( let r = 0; r < brickRowCount; r++ )
+        {
+            let b = bricks[ c ][ r ];
+            if ( x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight )
+            {
+                dy = -dy;
+                b.status = 0;
+                score++;
+            }
+        }
+    }
+}
+
+function drawScore() {
+    textSize(64);
+    text("Score: "+score, 8, height);
 }
