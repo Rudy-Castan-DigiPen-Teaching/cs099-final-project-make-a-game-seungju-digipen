@@ -3,172 +3,105 @@
 // Course     : CS099
 // Spring 2021
 
-let x;
-let y;
-let dx;
-let dy;
-let ballRadius = 15;
-let ballSpeed = 10;
+let playerScore = 0
+let paddle
+let ball
+let bricks = []
+let gameState
 
-let paddleHeight = 10;
-let paddleWidth = 500;
-let paddleX;
+let backgroundMusic
+let paddleSound
+let brickSound
 
-let rightPressed = false;
-let leftPressed = false;
-let gamePlay = true;
-let score = 0;
-
-let brickRowCount = 5;
-let brickColumnCount = 5;
-let brickWidth = 300;
-let brickHeight = 60;
-let brickGap = 10;
-let brickOffsetTop = 30;
-let brickOffsetLeft = 30;
-let bricks = [];
+function preload()
+{
+    paddleSound = loadSound( 'assets/ballhitpaddle.mp3' );
+    brickSound = loadSound( 'assets/ballhitbricks.wav' );
+    backgroundMusic = loadSound( 'assets/Fly With Me.mp3' );
+}
 
 function setup()
 {
-    createCanvas( 1600, 1200 );
-    x = width / 2;
-    y = height / 2
-    dx = ballSpeed;
-    dy = ballSpeed;
-    paddleX = ( width - paddleWidth ) / 2;
-    for ( let c = 0; c < brickColumnCount; c++ )
+    createCanvas( 1600, 1200 )
+    gameState = 'playing'
+    paddle = new Paddle()
+    ball = new Ball( paddle )
+    const rows = 10
+    const bricksPerRow = 16
+    const brickWidth = width / bricksPerRow
+    backgroundMusic.loop();
+    for ( let row = 0; row < rows; row++ )
     {
-        bricks[ c ] = [];
-        for ( let r = 0; r < brickRowCount; r++ )
+        for ( let i = 0; i < bricksPerRow; i++ )
         {
-            bricks[ c ][ r ] = {
-                x: 0,
-                y: 0,
-                status: 1
-            };
+            brick = new Brick( new Vec2( brickWidth * i, 40 * row ), brickWidth, 40, color( 265, 165, 0 ) )
+            bricks.push( brick )
         }
     }
+
 }
 
 function draw()
 {
-    background( 120 );
-    if ( gamePlay )
+    if ( gameState == 'playing' )
     {
-        drawBall();
-        drawPaddle();
-        keyInput();
-        paddleMoving();
-        drawBricks();
-        collisionDetection();
-        drawScore();
-        x += dx;
-        y += dy;
-        if ( x + dx > width - ballRadius || x + dx < ballRadius )
+        background( 120 )
+
+        paddle.draw()
+        if ( keyIsDown( LEFT_ARROW ) )
         {
-            dx = -dx;
+            paddle.move( 'left' )
         }
-        if ( y + dy < ballRadius )
+        else if ( keyIsDown( RIGHT_ARROW ) )
         {
-            dy = -dy;
+            paddle.move( 'right' )
         }
-        else if ( y + dy > height - ballRadius )
+
+        ball.draw()
+        ball.update()
+        ball.bounceEdge()
+        ball.bouncePaddle()
+
+        for ( let i = bricks.length - 1; i >= 0; i-- )
         {
-            if ( x > paddleX && x < paddleX + paddleWidth )
+            const brick = bricks[ i ]
+            if ( brick.isColliding( ball ) )
             {
-                dy = -dy;
+                ball.reverseY()
+                bricks.splice( i, 1 )
+                playerScore += brick.points
+                paddle.location.y -= 5
+                brickSound.play()
             }
             else
             {
-                gamePlay = false;
+                brick.draw()
             }
         }
-    }
-    if(!gamePlay)
-    {
 
-    }
-}
+        fill( 255 )
+        textSize( 32 )
+        text( "Score : " + playerScore, width - 200, 30 )
 
-function drawBall()
-{
-    circle( x, y, 30 );
-}
+        if ( ball.offBottom() )
+        {
+            gameState = 'LOSE'
+        }
 
-function drawPaddle()
-{
-    rect( paddleX, height - paddleHeight, paddleWidth, paddleHeight );
-}
+        if ( bricks.length === 0 )
+        {
+            gameState = 'WIN'
+        }
 
-function keyInput()
-{
-    if ( keyIsDown( LEFT_ARROW ) )
-    {
-        leftPressed = true;
     }
     else
     {
-        leftPressed = false;
+        push()
+        fill( 255 )
+        textAlign( CENTER )
+        textSize( 128 )
+        text( "YOU " + gameState, width / 2, height / 2 )
+        pop()
+        backgroundMusic.pause();
     }
-
-    if ( keyIsDown( RIGHT_ARROW ) )
-    {
-        rightPressed = true;
-    }
-    else
-    {
-        rightPressed = false;
-    }
-}
-
-function paddleMoving()
-{
-    if ( rightPressed )
-    {
-        paddleX += 10;
-    }
-    if ( leftPressed )
-    {
-        paddleX -= 10;
-    }
-}
-
-function drawBricks()
-{
-    for ( let c = 0; c < brickColumnCount; c++ )
-    {
-        for ( let r = 0; r < brickRowCount; r++ )
-        {
-            if ( bricks[ c ][ r ].status == 1 )
-            {
-                let brickX = ( c * ( brickWidth + brickGap ) ) + brickOffsetLeft;
-                let brickY = ( r * ( brickHeight + brickGap ) ) + brickOffsetTop;
-                bricks[ c ][ r ].x = brickX;
-                bricks[ c ][ r ].y = brickY;
-                rect( brickX, brickY, brickWidth, brickHeight );
-            }
-        }
-    }
-}
-
-function collisionDetection()
-{
-    for ( let c = 0; c < brickColumnCount; c++ )
-    {
-        for ( let r = 0; r < brickRowCount; r++ )
-        {
-            let b = bricks[ c ][ r ];
-            if ( x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight )
-            {
-                dy = -dy;
-                b.status = 0;
-                score++;
-            }
-        }
-    }
-}
-
-function drawScore() {
-    textSize(64);
-    text("Score: "+score, 8, height);
 }
