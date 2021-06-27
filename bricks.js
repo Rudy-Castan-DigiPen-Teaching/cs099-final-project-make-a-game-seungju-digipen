@@ -1,3 +1,8 @@
+// Name       : Seungju Song
+// Assignment : make-a-game
+// Course     : CS099
+// Spring 2021
+
 class Brick
 {
     constructor( location, width, height, color )
